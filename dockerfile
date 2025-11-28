@@ -70,12 +70,14 @@ RUN composer self-update --1
 # 12. Download TAO 3.6.0
 ############################################
 WORKDIR /var/www/html
-RUN wget https://github.com/oat-sa/package-tao/archive/refs/tags/3.6.0.zip
+RUN wget https://github.com/oat-sa/package-tao/archive/refs/tags/3.6.0.zip -O tao_3.6.0.zip
 
 ############################################
-# 13. Unzip TAO
+# 13. Unzip TAO (correct folder name)
 ############################################
-RUN unzip tao_3.6.0.zip && mv tao tao && rm tao_3.6.0.zip
+RUN unzip tao_3.6.0.zip \
+ && mv package-tao-3.6.0 tao \
+ && rm tao_3.6.0.zip
 
 ############################################
 # 14. Install TAO dependencies
@@ -86,9 +88,9 @@ RUN composer install --no-interaction --prefer-dist
 ############################################
 # 15. Install MathJax
 ############################################
-RUN wget https://hub.taotesting.com/resources/taohub-articles/articles/third-party/MathJax_Install_TAO_3x.sh
-RUN chmod +x MathJax_Install_TAO_3x.sh
-RUN ./MathJax_Install_TAO_3x.sh || true
+RUN wget https://hub.taotesting.com/resources/taohub-articles/articles/third-party/MathJax_Install_TAO_3x.sh -O mathjax.sh \
+ && chmod +x mathjax.sh \
+ && ./mathjax.sh || true
 
 ############################################
 # 16. Entrypoint
