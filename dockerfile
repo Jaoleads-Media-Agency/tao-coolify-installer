@@ -83,7 +83,8 @@ RUN unzip tao_3.6.0.zip \
 # 14. Install TAO dependencies
 ############################################
 WORKDIR /var/www/html/tao
-RUN composer install --no-interaction --prefer-dist
+# RUN composer install --no-interaction --prefer-dist
+RUN composer install --no-interaction --prefer-dist --verbose
 
 ############################################
 # 15. Install MathJax
