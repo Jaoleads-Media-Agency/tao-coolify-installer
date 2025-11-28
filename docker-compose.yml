@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: tao-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: tao
+      MYSQL_USER: taouser
+      MYSQL_PASSWORD: taopass
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  tao:
+    build: .
+    container_name: tao-app
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      DB_HOST: db
+      DB_NAME: tao
+      DB_USER: taouser
+      DB_PASS: taopass
+      ADMIN_USER: admin
+      ADMIN_PASS: admin123
+      BASE_URL: http://localhost
+    depends_on:
+      - db
+    volumes:
+      - tao_data:/var/www/html/tao
+
+volumes:
+  mysql_data:
+  tao_data:
