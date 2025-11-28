@@ -1,37 +1,39 @@
 version: "3.9"
 
 services:
-  db:
-    image: mysql:8.0
-    container_name: tao-db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: tao
-      MYSQL_USER: taouser
-      MYSQL_PASSWORD: taopass
-    volumes:
-      - mysql_data:/var/lib/mysql
-
   tao:
-    build: .
-    container_name: tao-app
-    restart: always
-    ports:
-      - "80:80"
-    environment:
-      DB_HOST: db
-      DB_NAME: tao
-      DB_USER: taouser
-      DB_PASS: taopass
-      ADMIN_USER: admin
-      ADMIN_PASS: admin123
-      BASE_URL: http://localhost
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tao
     depends_on:
       - db
+    environment:
+      TAO_DB_HOST: db
+      TAO_DB_NAME: ${TAO_DB_NAME}
+      TAO_DB_USER: ${TAO_DB_USER}
+      TAO_DB_PASS: ${TAO_DB_PASS}
+      TAO_ADMIN_USER: ${TAO_ADMIN_USER}
+      TAO_ADMIN_PASS: ${TAO_ADMIN_PASS}
+      TAO_BASE_URL: ${TAO_BASE_URL}
+    ports:
+      - "8080:80" # Coolify can map this to your domain
     volumes:
       - tao_data:/var/www/html/tao
+    restart: always
+
+  db:
+    image: mariadb:10.5
+    container_name: tao_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${TAO_DB_NAME}
+      MYSQL_USER: ${TAO_DB_USER}
+      MYSQL_PASSWORD: ${TAO_DB_PASS}
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
 
 volumes:
-  mysql_data:
   tao_data:
+  db_data:
