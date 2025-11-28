@@ -70,7 +70,7 @@ RUN composer self-update --1
 # 12. Download TAO 3.6.0
 ############################################
 WORKDIR /var/www/html
-RUN wget https://github.com/oat-sa/package-tao/releases/download/3.6.0/tao_3.6.0.zip
+RUN wget https://github.com/oat-sa/package-tao/archive/refs/tags/3.6.0.zip
 
 ############################################
 # 13. Unzip TAO
