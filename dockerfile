@@ -16,28 +16,23 @@ RUN apt-get install -y curl wget zip unzip git
 RUN apt-get install -y tidy libtidy-dev
 
 ############################################
-# 4. Install PHP build dependencies
+# 4. Install build tools for PECL modules
 ############################################
-RUN apt-get install -y build-essential php7.4-dev
+RUN apt-get install -y build-essential autoconf
 
 ############################################
-# 5. Install extra PHP libs
+# 5. Install PHP extension dependencies
 ############################################
 RUN apt-get install -y libxml2-dev libzip-dev libcurl4-openssl-dev libonig-dev
 
 ############################################
-# 6. Install PHP extensions (core ones)
+# 6. Install PHP extensions one-by-one
 ############################################
 RUN docker-php-ext-install mysqli
-
 RUN docker-php-ext-install pdo pdo_mysql
-
 RUN docker-php-ext-install xml
-
 RUN docker-php-ext-install zip
-
 RUN docker-php-ext-install mbstring
-
 RUN docker-php-ext-install tidy
 
 ############################################
@@ -47,17 +42,17 @@ RUN pecl install mcrypt-1.0.4 || true
 RUN echo "extension=mcrypt.so" > /usr/local/etc/php/conf.d/mcrypt.ini
 
 ############################################
-# 8. Enable Apache modules
+# 8. Enable Apache rewrite
 ############################################
 RUN a2enmod rewrite
 
 ############################################
-# 9. Adjust DocumentRoot
+# 9. Change DocumentRoot
 ############################################
 RUN sed -i 's|/var/www/html|/var/www/html/tao|g' /etc/apache2/sites-available/000-default.conf
 
 ############################################
-# 10. Add Directory block
+# 10. Directory permissions block
 ############################################
 RUN echo "<Directory /var/www/html/tao>\n\
         Options FollowSymLinks MultiViews\n\
@@ -66,35 +61,40 @@ RUN echo "<Directory /var/www/html/tao>\n\
 </Directory>" >> /etc/apache2/apache2.conf
 
 ############################################
-# 11. Install Composer
+# 11. Install Composer (v1 required)
 ############################################
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-############################################
-# 12. Downgrade Composer to v1 (TAO requirement)
-############################################
 RUN composer self-update --1
 
 ############################################
-# 13. Download TAO package
+# 12. Download TAO 3.6.0
 ############################################
 WORKDIR /var/www/html
 RUN wget https://github.com/oat-sa/package-tao/releases/download/3.6.0/tao_3.6.0.zip
 
 ############################################
-# 14. Unzip TAO
+# 13. Unzip TAO
 ############################################
 RUN unzip tao_3.6.0.zip && mv tao tao && rm tao_3.6.0.zip
 
 ############################################
-# 15. Composer install for TAO
+# 14. Install TAO dependencies
 ############################################
 WORKDIR /var/www/html/tao
 RUN composer install --no-interaction --prefer-dist
 
 ############################################
-# 16. Install MathJax
+# 15. Install MathJax
 ############################################
 RUN wget https://hub.taotesting.com/resources/taohub-articles/articles/third-party/MathJax_Install_TAO_3x.sh
 RUN chmod +x MathJax_Install_TAO_3x.sh
-RUN
+RUN ./MathJax_Install_TAO_3x.sh || true
+
+############################################
+# 16. Entrypoint
+############################################
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["apache2-foreground"]
