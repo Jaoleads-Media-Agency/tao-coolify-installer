@@ -1,26 +1,28 @@
 FROM php:7.4-apache
 
 ############################################
-# 1. Update apt and install utilities
+# 1. Update apt and install required libraries
 ############################################
 RUN apt-get update && apt-get install -y \
     curl wget zip unzip git \
-    tidy libtidy-dev \
-    build-essential autoconf \
+    build-essential autoconf pkg-config \
     libxml2-dev libzip-dev libcurl4-openssl-dev libonig-dev \
     libicu-dev libpng-dev libjpeg-dev libfreetype6-dev libmcrypt-dev \
-    libssl-dev libxslt-dev zlib1g-dev
+    libssl-dev libxslt-dev zlib1g-dev libreadline-dev libsqlite3-dev \
+    libtidy-dev tidy libgmp-dev libpq-dev
 
 ############################################
-# 2. Install PHP extensions
+# 2. Install all required PHP extensions
 ############################################
-RUN docker-php-ext-install mysqli pdo pdo_mysql xml zip mbstring tidy intl soap gd
+RUN docker-php-ext-install \
+    mysqli pdo pdo_mysql pdo_sqlite xml zip mbstring tidy intl soap gd bcmath calendar exif gmp pcntl opcache sockets sysvmsg sysvsem sysvshm \
+    && docker-php-ext-enable opcache
 
 ############################################
-# 3. Install mcrypt via PECL
+# 3. Install PECL extensions
 ############################################
-RUN pecl install mcrypt-1.0.4 || true
-RUN echo "extension=mcrypt.so" > /usr/local/etc/php/conf.d/mcrypt.ini
+RUN pecl install mcrypt-1.0.4 xdebug-3.3.1 || true
+RUN docker-php-ext-enable mcrypt xdebug
 
 ############################################
 # 4. Enable Apache rewrite
@@ -28,7 +30,7 @@ RUN echo "extension=mcrypt.so" > /usr/local/etc/php/conf.d/mcrypt.ini
 RUN a2enmod rewrite
 
 ############################################
-# 5. Change DocumentRoot to /var/www/html/tao
+# 5. Set DocumentRoot to /var/www/html/tao
 ############################################
 RUN sed -i 's|/var/www/html|/var/www/html/tao|g' /etc/apache2/sites-available/000-default.conf
 RUN echo "<Directory /var/www/html/tao>\n\
@@ -38,7 +40,7 @@ RUN echo "<Directory /var/www/html/tao>\n\
 </Directory>" >> /etc/apache2/apache2.conf
 
 ############################################
-# 6. Install Composer v1
+# 6. Install Composer v1 with unlimited memory
 ############################################
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 RUN composer self-update --1
@@ -58,10 +60,10 @@ RUN unzip tao_3.6.0.zip \
     && rm tao_3.6.0.zip
 
 ############################################
-# 9. Install TAO PHP dependencies
+# 9. Install TAO dependencies
 ############################################
 WORKDIR /var/www/html/tao
-RUN composer install --no-interaction --prefer-dist --verbose
+RUN composer install --no-interaction --prefer-dist --ignore-platform-reqs --verbose
 
 ############################################
 # 10. Install MathJax
